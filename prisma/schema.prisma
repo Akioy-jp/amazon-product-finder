@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Market {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  categories  Category[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Category {
+  id          String       @id @default(cuid())
+  name        String
+  marketId    String
+  market      Market       @relation(fields: [marketId], references: [id])
+  rankingUrls RankingUrl[]
+  competitors Competitor[]
+  proposals   Proposal[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model RankingUrl {
+  id         String   @id @default(cuid())
+  url        String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+}
+
+model Competitor {
+  id          String       @id @default(cuid())
+  name        String
+  url         String?
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  products    Product[]
+  reviews     ReviewSummary[]
+  channels    Channel[]    @relation("CompetitorChannels")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Channel {
+  id          String       @id @default(cuid())
+  name        String       // e.g. Amazon, Rakuten
+  competitors Competitor[] @relation("CompetitorChannels")
+}
+
+model Product {
+  id           String       @id @default(cuid())
+  name         String
+  url          String?
+  competitorId String
+  competitor   Competitor   @relation(fields: [competitorId], references: [id])
+  pricePoints  PricePoint[]
+  currentPrice Float?
+  currency     String       @default("JPY")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model PricePoint {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  price     Float
+  currency  String   @default("JPY")
+  recordedAt DateTime @default(now())
+}
+
+model ReviewSummary {
+  id           String     @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id])
+  averageRating Float
+  reviewCount  Int
+  sentiment    String?    // e.g., "POSITIVE", "NEUTRAL", "NEGATIVE"
+  summary      String?
+  recordedAt   DateTime   @default(now())
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // e.g., "PRICE_CHANGE", "NEW_PRODUCT", "SENTIMENT_DROP"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Proposal {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  targetPrice Float
+  productName String   // Proposed name concept
+  features    String   // Key features
+  keywords    String?  // Top 3 Middle Keywords
+  reasoning   String   // Why this is a good opportunity (Gap analysis)
+  status      String   @default("DRAFT") // DRAFT, ACCEPTED, REJECTED
+  createdAt   DateTime @default(now())
+}
