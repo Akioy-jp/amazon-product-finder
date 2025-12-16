@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // providerを復活
-  url      = env("DATABASE_URL") // urlをenv()に戻す
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Market {
