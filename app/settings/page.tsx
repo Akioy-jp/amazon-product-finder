@@ -2,6 +2,9 @@ import { getConfiguration } from './actions'
 import ConfigurationForm from './components/ConfigurationForm'
 import { Toaster } from "@/components/ui/sonner"
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function SettingsPage() {
     const data = await getConfiguration()
 
