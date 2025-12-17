@@ -29,7 +29,7 @@ export class DataCollector {
     async collectForCompetitor(competitorId: string): Promise<CollectionResult> {
         const competitor = await prisma.competitor.findUnique({
             where: { id: competitorId },
-            include: { category: true }
+            include: { market: true }
         })
 
         if (!competitor) throw new Error('Competitor not found')
@@ -39,15 +39,14 @@ export class DataCollector {
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1500))
 
-        // Simulated Logic based on Category Context
-        // In a real app, this would use Puppeteer/Playwright or APIs.
+        // Simulated Logic based on Category/Market Context
         const products: CollectedProduct[] = []
 
         // Generate 3-5 mock products
         const productCount = randomInt(3, 5)
         for (let i = 0; i < productCount; i++) {
             products.push({
-                name: `${competitor.name} Product ${String.fromCharCode(65 + i)} - ${competitor.category.name} Edition`,
+                name: `${competitor.name} Product ${String.fromCharCode(65 + i)}`,
                 url: `https://example.com/product/${competitor.name.toLowerCase()}-${i}`,
                 price: randomPrice(10000), // Base price ~10000
                 currency: 'JPY'
@@ -58,7 +57,7 @@ export class DataCollector {
             averageRating: parseFloat((Math.random() * 2 + 3).toFixed(1)), // 3.0 - 5.0
             reviewCount: randomInt(50, 500),
             sentiment: Math.random() > 0.5 ? 'POSITIVE' : 'NEUTRAL',
-            summary: `Customers generally like the ${competitor.category.name} lineup from ${competitor.name}, praising the durability and design.`
+            summary: `Customers generally like the lineup from ${competitor.name}, praising the durability and design.`
         }
 
         return {
