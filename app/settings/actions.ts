@@ -184,41 +184,45 @@ export async function deleteMarket(id: string) {
 }
 
 export async function bulkImportCategories(marketId: string, csvData: string) {
-    const lines = csvData.split('\n')
+    const lines = csvData.split('\n').filter(l => l.trim().length > 0)
+
+    // Process in batches of 10 to avoid DB connection exhaustion but improve speed
+    const BATCH_SIZE = 10
     let count = 0
 
-    for (const line of lines) {
-        if (!line.trim()) continue
-        // Handle "Name,URL" or just "Name"
-        const [name, url] = line.split(',').map(s => s.trim())
+    for (let i = 0; i < lines.length; i += BATCH_SIZE) {
+        const batch = lines.slice(i, i + BATCH_SIZE)
 
-        if (!name) continue
+        await Promise.all(batch.map(async (line) => {
+            const [name, url] = line.split(',').map(s => s.trim())
+            if (!name) return
 
-        // 1. Find or Create Category
-        let category = await prisma.category.findFirst({
-            where: { marketId, name }
-        })
-
-        if (!category) {
-            category = await prisma.category.create({
-                data: { marketId, name }
-            })
-        }
-
-        // 2. Add Ranking URL if provided
-        if (url && category) {
-            // Check existence
-            const existingUrl = await prisma.rankingUrl.findFirst({
-                where: { categoryId: category.id, url }
+            // 1. Find or Create Category (Upsert-like logic)
+            // Note: findFirst + create is not atomic but sufficient for this tool
+            let category = await prisma.category.findFirst({
+                where: { marketId, name }
             })
 
-            if (!existingUrl) {
-                await prisma.rankingUrl.create({
-                    data: { categoryId: category.id, url }
+            if (!category) {
+                category = await prisma.category.create({
+                    data: { marketId, name }
                 })
             }
-        }
-        count++
+
+            // 2. Add Ranking URL if provided
+            if (url && category) {
+                const existingUrl = await prisma.rankingUrl.findFirst({
+                    where: { categoryId: category.id, url }
+                })
+
+                if (!existingUrl) {
+                    await prisma.rankingUrl.create({
+                        data: { categoryId: category.id, url }
+                    })
+                }
+            }
+            count++
+        }))
     }
 
     revalidatePath('/settings')
