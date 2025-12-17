@@ -166,7 +166,7 @@ export default function ConfigurationForm({ initialData }: { initialData: Config
     const handleAddCompetitor = async (categoryId: string) => {
         if (!newCompetitorName) return
         try {
-            await createCompetitor({ name: newCompetitorName, url: newCompetitorUrl, categoryId })
+            await createCompetitor({ name: newCompetitorName, url: newCompetitorUrl, marketId: categoryId })
             setNewCompetitorName('')
             setNewCompetitorUrl('')
             toast.success('Competitor added')
