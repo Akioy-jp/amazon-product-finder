@@ -12,6 +12,7 @@ model Market {
   name        String
   description String?
   categories  Category[]
+  competitors Competitor[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -22,7 +23,6 @@ model Category {
   marketId    String
   market      Market       @relation(fields: [marketId], references: [id])
   rankingUrls RankingUrl[]
-  competitors Competitor[]
   proposals   Proposal[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -38,9 +38,9 @@ model RankingUrl {
 model Competitor {
   id          String       @id @default(cuid())
   name        String
-  url         String?
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id])
+  url         String?      // Storefront URL
+  marketId    String       // Changed from categoryId to marketId
+  market      Market       @relation(fields: [marketId], references: [id])
   products    Product[]
   reviews     ReviewSummary[]
   channels    Channel[]    @relation("CompetitorChannels")

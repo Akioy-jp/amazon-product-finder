@@ -120,7 +120,7 @@ export async function discoverRankingUrls(categoryId: string, seedUrl: string) {
     return { success: true, count: stats.urlsAdded, created: stats.categoriesCreated }
 }
 
-export async function createCompetitor(data: { name: string, url?: string, categoryId: string }) {
+export async function createCompetitor(data: { name: string, url?: string, marketId: string }) {
     await prisma.competitor.create({
         data,
     })
@@ -152,10 +152,10 @@ export async function getConfiguration() {
         include: {
             categories: {
                 include: {
-                    competitors: true,
                     rankingUrls: true
                 }
-            }
+            },
+            competitors: true
         }
     })
     const channels = await prisma.channel.findMany()

@@ -20,6 +20,7 @@ type Market = {
     id: string
     name: string
     categories: Category[]
+    competitors: Competitor[]
 }
 
 type RankingUrl = {
@@ -30,7 +31,6 @@ type RankingUrl = {
 type Category = {
     id: string
     name: string
-    competitors: Competitor[]
     rankingUrls: RankingUrl[]
 }
 
@@ -408,76 +408,72 @@ export default function ConfigurationForm({ initialData }: { initialData: Config
                 </CardContent>
             </Card>
 
-            {/* 4. Competitor Configuration */}
+            {/* 4. Competitor Shops (Global) */}
             <Card>
                 <CardHeader>
-                    <CardTitle>4. Competitors</CardTitle>
-                    <CardDescription>Add competitors to track within categories.</CardDescription>
+                    <CardTitle>4. Competitor Shops</CardTitle>
+                    <CardDescription>Register key competitor brands/shops (e.g. "MyProtein", "SAVAS").</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Select Market</Label>
-                            <Select onValueChange={setSelectedMarketId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a market..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {markets.map(m => (
-                                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Select Category</Label>
-                            <Select onValueChange={setSelectedCategoryId} disabled={!selectedMarketId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {selectedMarketId && markets.find(m => m.id === selectedMarketId)?.categories.map(c => (
-                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="space-y-2">
+                        <Label>Select Market</Label>
+                        <Select onValueChange={setSelectedMarketId}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a market..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {markets.map(m => (
+                                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    {selectedCategoryId && (
-                        <div className="space-y-4 border p-4 rounded-lg">
+                    {selectedMarketId && (
+                        <div className="space-y-4 border p-4 rounded-lg bg-slate-50">
+                            <Label className="text-slate-700 font-semibold">Add New Shop</Label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <Input
-                                    placeholder="Competitor Name (e.g. Sony)"
+                                    placeholder="Shop Name (e.g. Official Store)"
                                     value={newCompetitorName}
                                     onChange={(e) => setNewCompetitorName(e.target.value)}
                                 />
                                 <Input
-                                    placeholder="Website URL (Optional)"
+                                    placeholder="Ex: https://www.amazon.co.jp/stores/..."
                                     value={newCompetitorUrl}
                                     onChange={(e) => setNewCompetitorUrl(e.target.value)}
                                 />
                             </div>
-                            <Button className="w-full" onClick={() => handleAddCompetitor(selectedCategoryId)}>
-                                <Plus className="w-4 h-4 mr-2" /> Add Competitor
+                            <Button className="w-full" onClick={() => handleAddCompetitor(selectedMarketId)}>
+                                <Store className="w-4 h-4 mr-2" /> Register Shop
                             </Button>
                         </div>
                     )}
 
-                    {selectedCategoryId && (
+                    {selectedMarketId && (
                         <div className="space-y-2 mt-4">
-                            <h4 className="font-medium text-sm">Competitors in this category:</h4>
-                            {markets.find(m => m.id === selectedMarketId)?.categories.find(c => c.id === selectedCategoryId)?.competitors.map(comp => (
-                                <div key={comp.id} className="p-3 border rounded flex justify-between items-center bg-muted/50">
-                                    <div>
-                                        <div className="font-medium">{comp.name}</div>
-                                        <div className="text-xs text-muted-foreground">{comp.url}</div>
+                            <h4 className="font-medium text-sm text-muted-foreground">Registered Competitors in {markets.find(m => m.id === selectedMarketId)?.name}:</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {/* @ts-ignore - Temporary ignore for type mismatch during refactor */}
+                                {markets.find(m => m.id === selectedMarketId)?.competitors?.map((comp: any) => (
+                                    <div key={comp.id} className="p-3 border rounded flex justify-between items-center bg-white">
+                                        <div className="overflow-hidden">
+                                            <div className="font-bold flex items-center gap-2">
+                                                <Store className="w-3 h-3 text-slate-400" />
+                                                {comp.name}
+                                            </div>
+                                            <div className="text-xs text-blue-600 truncate underline">{comp.url}</div>
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => deleteCompetitor(comp.id)}>
+                                            <Trash2 className="w-4 h-4 text-destructive" />
+                                        </Button>
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={() => deleteCompetitor(comp.id)}>
-                                        <Trash2 className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            {/* @ts-ignore */}
+                            {(!markets.find(m => m.id === selectedMarketId)?.competitors || markets.find(m => m.id === selectedMarketId)?.competitors.length === 0) && (
+                                <p className="text-sm text-slate-400 italic">No competitors registered yet.</p>
+                            )}
                         </div>
                     )}
                 </CardContent>
