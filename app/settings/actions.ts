@@ -182,3 +182,45 @@ export async function deleteMarket(id: string) {
     await prisma.market.delete({ where: { id } })
     revalidatePath('/settings')
 }
+
+export async function bulkImportCategories(marketId: string, csvData: string) {
+    const lines = csvData.split('\n')
+    let count = 0
+
+    for (const line of lines) {
+        if (!line.trim()) continue
+        // Handle "Name,URL" or just "Name"
+        const [name, url] = line.split(',').map(s => s.trim())
+
+        if (!name) continue
+
+        // 1. Find or Create Category
+        let category = await prisma.category.findFirst({
+            where: { marketId, name }
+        })
+
+        if (!category) {
+            category = await prisma.category.create({
+                data: { marketId, name }
+            })
+        }
+
+        // 2. Add Ranking URL if provided
+        if (url && category) {
+            // Check existence
+            const existingUrl = await prisma.rankingUrl.findFirst({
+                where: { categoryId: category.id, url }
+            })
+
+            if (!existingUrl) {
+                await prisma.rankingUrl.create({
+                    data: { categoryId: category.id, url }
+                })
+            }
+        }
+        count++
+    }
+
+    revalidatePath('/settings')
+    return { success: true, count }
+}

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { createMarket, createCategory, createCompetitor, deleteMarket, deleteCategory, deleteCompetitor, createChannel, deleteChannel, addRankingUrl, deleteRankingUrl, discoverRankingUrls, testScrapingConnection } from '@/app/settings/actions'
+import { createMarket, createCategory, createCompetitor, deleteMarket, deleteCategory, deleteCompetitor, createChannel, deleteChannel, addRankingUrl, deleteRankingUrl, discoverRankingUrls, testScrapingConnection, bulkImportCategories } from '@/app/settings/actions'
 import { toast } from 'sonner'
 import {
     Select,
@@ -267,6 +267,38 @@ export default function ConfigurationForm({ initialData }: { initialData: Config
                             </div>
                             <Button onClick={() => handleAddCategory(selectedMarketId)} className="mb-0.5">
                                 <Plus className="w-4 h-4 mr-2" /> Add Category
+                            </Button>
+                        </div>
+                    )}
+
+                    {selectedMarketId && (
+                        <div className="mt-6 p-4 border rounded-lg bg-slate-50">
+                            <Label className="mb-2 block font-semibold text-slate-700">Bulk Import Categories via CSV</Label>
+                            <div className="text-xs text-slate-500 mb-2">
+                                Format: <code>Category Name, https://amazon...</code> (One per line)
+                            </div>
+                            <textarea
+                                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder={`Vitamin C, https://www.amazon.co.jp/...\nProtein, https://www.amazon.co.jp/...`}
+                                id="bulkImport"
+                            />
+                            <Button
+                                className="mt-2 w-full"
+                                variant="secondary"
+                                onClick={async () => {
+                                    const text = (document.getElementById('bulkImport') as HTMLTextAreaElement).value
+                                    if (!text) return
+                                    toast.info("Importing...")
+                                    try {
+                                        const res = await bulkImportCategories(selectedMarketId, text)
+                                        toast.success(`Imported ${res.count} items!`)
+                                            ; (document.getElementById('bulkImport') as HTMLTextAreaElement).value = ''
+                                    } catch (e) {
+                                        toast.error("Import failed")
+                                    }
+                                }}
+                            >
+                                <LayoutGrid className="w-4 h-4 mr-2" /> Bulk Import
                             </Button>
                         </div>
                     )}
