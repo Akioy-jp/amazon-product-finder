@@ -6,12 +6,16 @@ export class Analyzer {
         const category = await prisma.category.findUnique({
             where: { id: categoryId },
             include: {
-                competitors: {
+                market: {
                     include: {
-                        products: true,
-                        reviews: {
-                            orderBy: { recordedAt: 'desc' },
-                            take: 1
+                        competitors: {
+                            include: {
+                                products: true,
+                                reviews: {
+                                    orderBy: { recordedAt: 'desc' },
+                                    take: 1
+                                }
+                            }
                         }
                     }
                 },
@@ -21,7 +25,8 @@ export class Analyzer {
 
         if (!category) throw new Error("Category not found")
 
-        const competitors = category.competitors
+        // Use Market-level competitors (Fallback logic: ideally strictly filter by category context in future)
+        const competitors = category.market.competitors
         if (competitors.length === 0) return null
 
         // Calculate Average Price and Rating for the category

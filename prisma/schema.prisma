@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Schema Link: Competitor -> Market (Updated)
+
 model Market {
   id          String       @id @default(cuid())
   name        String
